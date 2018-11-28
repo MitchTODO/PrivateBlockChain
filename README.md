@@ -227,10 +227,7 @@ Copy and paste into control panel
 
 The video below shows the UI in action, from creating blocks to getting a better visual on how blocks are validated and connected. 
 
-<video width= '940' height = '480' controls muted>
-<source  src = "/UI.mp4" type = "video/mp4">
-</video>
-
+![](UI.gif)
 
 
 
