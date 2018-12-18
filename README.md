@@ -24,9 +24,7 @@ npm install crypto-js --save
 ```
 npm install level --save
 ```
-#### Web Server
-
-<b>This type of web server should only be used and accessed locally (127.0.0.1||localhost).</b> 
+#### Web API
 
 - Install fs 
 ```
@@ -40,18 +38,19 @@ npm install express
 ```
 npm install body-parser
 ```
+- Install sanitize
+```
+npm install sanitize
+```
 
 
 ## Files/Folders
 ```
-project2-----|
+project3-----|
              |----levelSandbox.js
              |
-             |----simpleChain.js
+             |----RESTful_api.js
              |
-             |----app.js
-             |
-             |----privateblockchainUI.html
              |
              |----chaindata 
                       |
@@ -65,25 +64,19 @@ project2-----|
 
 Contains leveldb class, this allows blocks on the chain to be persistent. The functions within the class are asynchronous meaning multiple operations can occur at once. Asynchronous operations are done through <a href = "https://developers.google.com/web/fundamentals/primers/promises">Promises </a> witch have to be dealt with appropriately.
 
-#### simpleChain.js
+#### RESTful_api.js
 
 Consist of two classes, Block class and Blockchain class. Together creates a functional private blockchain. With the help of levelSandbox the block chain can be saved and reused.
 
 Block class consist of only a constructor that describes the block object (hash,height,body,time,previousBlockHash).
 
 BlockChain class contains asynchronous functions that handle the creation of the chain and the management of blocks on the chain. The reason for Blockchain functions to return Promise it allows the data from leveldb to be used without having unknown variables.
- 
-<u>NOTE</u>
-I find this file to be good for building appilcations as shown in app.js
 
-#### app.js
-
-Contains the same code in simpleChain but, added a function web server that will accept get and post request from the client browser to manage and view the blockchain. Each get and post request calls out corresponding blockChain function with variables passed from the client. It utilizes the await operator to receive the Promise that will be sent back to the client.
-
-#### privateblockchainUI.html
-
-Privateblock chain UI
-Basic html code and dynamic javascript to better visualize and manage the private block chain. 
+<p style="color:#14800e;    font-size: 20px;
+    font-weight: bold;">NEW</p>
+<div style ="border:solid #14800e"> 
+Express framework was used to create a RESTful api that accepts a get and post request. The get endpoint receives data through the URL path with a block height parameter. Example to get block zero <a href= http://localhost:8000/block/0>http://localhost/block/0</a>. This will return a JSON object of the block. Post endpoint receives data in the http payload as x-www-form-urlencoded. That data is then used as the block body, which is added to the chain.
+</div>
 
 #### chaindata
 
@@ -96,19 +89,20 @@ Your reading it!
 
 ### Code Flow
 ```
-Blockchain class                      leveldb class
-    |                                    |
-    |--addBlock()                        |-- addLevelDBData()
-    |                                    |
-    |--validateBlock()                   |-- changeDBDate()
-    |                                    |
-    |--validateChain()                   |-- getLevelDBData()
-    |                                    |
-    |--getHeight()                       |-- addDataToLevelDB()
-    |                                    |
-    |--getBlock()                        |-- getBlockCount()
-                                         |
-                                         |-- getChain()
+
+Express Web Service            Blockchain class           leveldb class
+      |                             |                          |
+      |--app.get()                  |--addBlock()              |-- addLevelDBData()
+      |                             |                          |
+      |--app.post()                 |--validateBlock()         |-- changeDBDate()
+      |                             |                          |
+                                    |--validateChain()         |-- getLevelDBData()
+                                    |                          |
+                                    |--getHeight()             |-- addDataToLevelDB()
+                                    |                          |
+                                    |--getBlock()              |-- getBlockCount()
+                                                               |
+                                                               |-- getChain()
 ```
 
 
@@ -170,16 +164,42 @@ getBlock()
     |--getLevelDBData()
 ```
 
+<p style="color:#14800e;    font-size: 20px;
+    font-weight: bold;">NEW</p>
+<div style ="border:solid #14800e"> 
+
+Get request for a specific block is made through the block chain class to first get the height of the chain, then the block it self. 
+```
+app.get('/block/:index')
+      |
+      |--getHeight()
+      |
+      |--getBlock()
+            |
+            |--getLevelDBData()
+
+```
+Post request to create new block is made through the block chain class, add block.
+```
+app.post('/block')
+      |
+      |--addBlock()
+```
+</div>
+
+
 ### Managing the Private Blockchain 
 
 
-#### simpleChain.js
+#### RESTful_api.js
 
-To use simpleChain.js to manage the blockchain use lines 313-328 for creating and validation.
+To use RESTful_api.js to manage the blockchain use lines 313-328 for creating and validation.
 
 First call out BlockCreator to generate some blocks. The two inputs are timing between block being created and amount of blocks to be created. 
 Recommend to stay above 1 sec per block (1 sec == 1000)
+
 <u>NOTE</u> this will generate chaindata folder.
+
 ```
 // Used to create blocks
 BlockCreator(1000,5);
@@ -204,32 +224,105 @@ Input: block you want to inspect.
 PrivateChain.getBlock(1);
 ```
 
-#### app.js
+---
 
+<p style="color:#14800e;    font-size: 20px;
+    font-weight: bold;">NEW</p>
+
+#### Error Handling / Sanitize user input
+
+Handling errors is done through out both endpoints. Both have a appropriate response if the server stops working (500) with a message to the client. 
+```
+500 Internal Server Error
+Time:88 ms
+Size:257 B
+
+{
+    "Server": "Oops I broke!"
+}
+```
+Get request first sanitizes user input checking if its not a integer, if so response bad request (400) is sent back with a message. Else
+check if the block requested existences, if so return block object (200). Else bad request (400) is sent to client also telling how high the chain currently is. 
+
+```
+//Tried to send a string
+400 Bad request
+{
+    "Error": "Please enter a number."
+}
+
+//Successful request
+200  OK
+{
+    "hash": "71d3c5fab59044afefef8ecf13ecc3e8d750af17788274601dd39cb41ff22f4f",
+    "height": 0,
+    "body": "First block in the chain - Genesis block",
+    "time": "1545076056",
+    "previousBlockHash": ""
+}
+
+//Block doesnt existence
+400 Bad request
+{
+    "Error": "Block request is out of range. Current Height is 55."
+}
+
+```
+
+Post request also sanitizes user input by forcing the data to a string, then checking the length of the string is greater then zero. If so bad request (400) with a message is sent to client. Else
+message is sent block was successfully added (200).
+
+```
+//Nothing in the string
+400 Bad request
+{
+    "BlockStatus": "Failed (If this persist please revert to projects readme for example)"
+}
+
+// Block successfully added with data body from client
+200 OK
+{
+    "BlockStatus": "Successful"
+}
+
+```
+
+---
+
+<p style="color:#14800e;    font-size: 20px;
+    font-weight: bold;">NEW</p>
+
+#### Using the api
+
+##### Get request for a block 
+
+Getting a block is done through the url. After the last forward slash represents a block by height /block/{height}. JSON object is returned representing the block.
+
+Example URL: http://localhost:8000/block/0
+
+
+
+
+##### Post request to add blocks
+
+Data must be encoded with x-www-form-urlencoded. Name attribute of the input text MUST have the name="BlockBody". JSON object message is returned telling whether adding a block was successful.
+
+Example HTML code to post data to API
+```
+<form action="http://localhost:8000/block" method="post" enctype="application/x-www-form-urlencoded">
+  Body data to be sent to be added to a a new block: <input type="text" name="BlockBody"><br>
+  <input type="submit" value="Submit">
+</form>
+```
+
+#### Running the server
 Starting the web server
-first cd into project repository ``` cd Project_2 ```
+first cd into project repository ``` cd Project_3 ```
 run 
 ```
-node app.js
+node RESTful_api.js
 ```
-The server will be listing on 8080 for a client connection.
-
-<u>Developed with Google Chrome</u>
-Copy and paste the socket into url of browser  ```http://127.0.0.1:8080```
-
-
-
-
-Having trouble on windows, windows firewall might need to be turn off.
-
-Copy and paste into control panel 
-```Control Panel\System and Security\Windows Defender Firewall\Customize Settings``` then select ```Turn off windows defender Firewall ```. Dont forget to turn it back on!
-
-The video below shows the UI in action, from creating blocks to getting a better visual on how blocks are validated and connected. 
-
-![](UI.gif)
-
-
+The server will be listing on 8000 for a client connection.
 
 
 ### Potential Short Comings
