@@ -72,11 +72,10 @@ Block class consist of only a constructor that describes the block object (hash,
 
 BlockChain class contains asynchronous functions that handle the creation of the chain and the management of blocks on the chain. The reason for Blockchain functions to return Promise it allows the data from leveldb to be used without having unknown variables.
 
-<p style="color:#14800e;    font-size: 20px;
-    font-weight: bold;">NEW</p>
-<div style ="border:solid #14800e"> 
+### NEW
+
 Express framework was used to create a RESTful api that accepts a get and post request. The get endpoint receives data through the URL path with a block height parameter. Example to get block zero <a href= http://localhost:8000/block/0>http://localhost/block/0</a>. This will return a JSON object of the block. Post endpoint receives data in the http payload as x-www-form-urlencoded. That data is then used as the block body, which is added to the chain.
-</div>
+
 
 #### chaindata
 
@@ -164,9 +163,7 @@ getBlock()
     |--getLevelDBData()
 ```
 
-<p style="color:#14800e;    font-size: 20px;
-    font-weight: bold;">NEW</p>
-<div style ="border:solid #14800e"> 
+### NEW
 
 Get request for a specific block is made through the block chain class to first get the height of the chain, then the block it self. 
 ```
@@ -185,7 +182,7 @@ app.post('/block')
       |
       |--addBlock()
 ```
-</div>
+
 
 
 ### Managing the Private Blockchain 
@@ -226,8 +223,7 @@ PrivateChain.getBlock(1);
 
 ---
 
-<p style="color:#14800e;    font-size: 20px;
-    font-weight: bold;">NEW</p>
+### NEW
 
 #### Error Handling / Sanitize user input
 
@@ -289,8 +285,7 @@ message is sent block was successfully added (200).
 
 ---
 
-<p style="color:#14800e;    font-size: 20px;
-    font-weight: bold;">NEW</p>
+### NEW
 
 #### Using the api
 

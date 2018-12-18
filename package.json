@@ -1,0 +1,17 @@
+{
+  "name": "blockchain_api",
+  "version": "1.0.0",
+  "description": "RESTful_api for private block chain",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "MT",
+  "license": "ISC",
+  "dependencies": {
+    "crypto-js": "^3.1.9-1",
+    "express": "^4.16.4",
+    "level": "^4.0.0",
+    "sanitize": "^2.1.0"
+  }
+}
