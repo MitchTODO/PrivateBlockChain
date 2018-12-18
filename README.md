@@ -72,10 +72,13 @@ Block class consist of only a constructor that describes the block object (hash,
 
 BlockChain class contains asynchronous functions that handle the creation of the chain and the management of blocks on the chain. The reason for Blockchain functions to return Promise it allows the data from leveldb to be used without having unknown variables.
 
+---
+
 ### NEW
 
 Express framework was used to create a RESTful api that accepts a get and post request. The get endpoint receives data through the URL path with a block height parameter. Example to get block zero <a href= http://localhost:8000/block/0>http://localhost/block/0</a>. This will return a JSON object of the block. Post endpoint receives data in the http payload as x-www-form-urlencoded. That data is then used as the block body, which is added to the chain.
 
+---
 
 #### chaindata
 
@@ -162,6 +165,8 @@ getBlock()
     |
     |--getLevelDBData()
 ```
+
+---
 
 ### NEW
 
@@ -309,6 +314,7 @@ Example HTML code to post data to API
   <input type="submit" value="Submit">
 </form>
 ```
+<b>NOTE</b> tested and developed with <a href ="https://www.getpostman.com/" >postman</a> 
 
 #### Running the server
 Starting the web server
