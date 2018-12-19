@@ -75,7 +75,7 @@ BlockChain class contains asynchronous functions that handle the creation of the
 ---
 
 
-Express framework was used to create a RESTful api that accepts a get and post request. The get endpoint receives data through the URL path with a block height parameter. Example to get block zero <a href= http://localhost:8000/block/0>http://localhost/block/0</a>. This will return a JSON object of the block. Post endpoint receives data in the http payload as raw. That data is then used as the block body, which is added to the chain.
+Express framework was used to create a RESTful api that accepts a get and post request. The get endpoint receives data through the URL path with a block height parameter. Example to get block zero <a href= http://localhost:8000/block/0>http://localhost/block/0</a>. This will return a JSON object of the block. Post endpoint receives data in the http payload as raw json. That data is then used as the block body, which is added to the chain.
 
 ---
 
