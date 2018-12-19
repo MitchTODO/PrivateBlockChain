@@ -5,13 +5,13 @@
 
 const SHA256 = require('crypto-js/sha256');
 
-// leveldb import 
+// leveldb import
 const Leveldb = require('./levelSandbox.js');
 
 // Constuct leveldb object (Saved blockchain)
 const db = new Leveldb.leveldb;
 
-// web server imports 
+// web server imports
 var express = require('express');
 var bodyParser = require('body-parser');
 var app   = express();
@@ -31,53 +31,10 @@ class Block{
     }
 }
 
-/* ============================================ Blockchain Class ================================================================
-|  -Class with a constructor for new blockchain 		                                                                              | 
-|   -Constructor is in charge of wether a genesis block should created or generate a new block from the last block in the database|
-|  ==============================================================================================================================*/
+/* ====================== Blockchain Class ================================*/
+
 
 class Blockchain{
-  constructor(){
-    // construct chain in memory 
-    this.chain = [];
-    // get height of db, this allow to add block to db without deletion of chain
-    db.getBlocksCount().then((result) => {
-      // If nothing create a genesis block
-      if(!result) {
-        let GenBlock = new Block("First block in the chain - Genesis block");
-        GenBlock.time = new Date().getTime().toString().slice(0,-3);
-        GenBlock.height = 0;
-        GenBlock.hash = SHA256(JSON.stringify(GenBlock)).toString();
-        this.chain.push(GenBlock);
-        db.addDataToLevelDB(JSON.stringify(GenBlock).toString());
-        // else create a new block with the correct height 
-        // NOTE this means a new block will be add when constucting Blockchain class
-        }else {
-          db.getLevelDBData(result - 1).then((resultBlock) => {
-            if(!resultBlock){
-              console.log('Cant ID last DB block');
-              //create new block with the height + 1 of last block added to db
-              // the new block is add to database chain and memory chain
-            }else{
-              var lastDBblock = JSON.parse(resultBlock);
-              var PH = lastDBblock.hash;
-              let CB = new Block();
-              CB.previousBlockHash = PH;
-              CB.height = result;
-              CB.time = new Date().getTime().toString().slice(0,-3);
-              CB.hash = SHA256(JSON.stringify(CB)).toString();
-              // Chain in memory
-              this.chain.push(CB);
-              // Chain in db 
-              db.addDataToLevelDB(JSON.stringify(CB).toString());
-              
-            }
-           }).catch((err) => { console.log(err); });
-          
-        }
-    }).catch((err) => { console.log(err); });
-    
-  }
 
 
 /* ==================== Create new block =================
@@ -85,21 +42,43 @@ class Blockchain{
 |  =====================================================*/
 
   addBlock(newBlock){
-    // Block height from chain in memory
-    newBlock.height = this.chain[this.chain.length - 1].height + 1;
-    // UTC timestamp
-    newBlock.time = new Date().getTime().toString().slice(0,-3);
-    // previous block hash
-    if(newBlock.height>0){
-      // Will have to change for no prior hash value aka starting from ! 0 
-      newBlock.previousBlockHash = this.chain[this.chain.length-1].hash;
-    }
-    // Block hash with SHA256 using newBlock and converting to a string
-    newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-    // Adding block object to chain
-    db.addDataToLevelDB(JSON.stringify(newBlock).toString());
-    // Add block to chain in memory
-  	this.chain.push(newBlock);
+		// get height of db, this allow to add block to db without deletion of chain
+		db.getBlocksCount().then((result) => {
+			// If nothing create a genesis block
+			if(!result) {
+
+				newBlock.previousBlockHash = "";
+				newBlock.height = result;
+				newBlock.time = new Date().getTime().toString().slice(0,-3);
+				newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+				// Chain in memory
+				// Chain in db
+				db.addDataToLevelDB(JSON.stringify(newBlock).toString());
+				// else create a new block with the correct height
+				// NOTE this means a new block will be add when constucting Blockchain class
+				}else {
+					db.getLevelDBData(result - 1).then((resultBlock) => {
+						if(!resultBlock){
+							console.log('Cant ID last DB block');
+							//create new block with the height + 1 of last block added to db
+							// the new block is add to database chain and memory chain
+						}else{
+							var lastDBblock = JSON.parse(resultBlock);
+							var PH = lastDBblock.hash;
+							newBlock.previousBlockHash = PH;
+							newBlock.height = result;
+							newBlock.time = new Date().getTime().toString().slice(0,-3);
+							newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+
+							// Chain in db
+							db.addDataToLevelDB(JSON.stringify(newBlock).toString());
+
+						}
+					 }).catch((err) => { console.log(err); });
+
+				}
+		}).catch((err) => { console.log(err); });
+
   }
 
 
@@ -115,19 +94,18 @@ class Blockchain{
 
       validateBlock(blockHeight){
         return new Promise(resolve => {
-        // get requested block 
+        // get requested block
         db.getLevelDBData(blockHeight).then((block) => {
           if (!block){
-            console.log('Error With getting Block within validateBlock')
             resolve("A Error occurred, please check block range");
           }else{
             // Turn block into object
             var obj = JSON.parse(block);
             // Hold block hash
             var blockhash = obj.hash;
-            // make block hash empty sting 
+            // make block hash empty sting
             obj.hash = "";
-            // rehash the block 
+            // rehash the block
             var validBlockHash = SHA256(JSON.stringify(obj)).toString();
             // put back hash for validation
             obj.hash = blockhash;
@@ -160,7 +138,7 @@ class Blockchain{
 
     validateChain(){
       return new Promise(resolve => {
-        //get the height of the chain 
+        //get the height of the chain
       db.getBlocksCount().then((result) => {
         if(!result) {
           console.log('Error with getting chain height within validateChain');
@@ -168,7 +146,7 @@ class Blockchain{
             var CorrectCounter = 0;
             // loop through each block from block one used to compare pervious hash
             for (var a = 0; a < result + 1; a++){
-              // get blocks value used to compare 
+              // get blocks value used to compare
               // NOTE Block objects are returns as strings
               db.getLevelDBData(a-1).then((hash) => {
                 if (!hash){
@@ -184,7 +162,7 @@ class Blockchain{
                   var validBlockHash = SHA256(JSON.stringify(obj)).toString();
                   // put back object hash that was removed
                   obj.hash = blockhash;
-                  //genesis block has no pervious hash, block is only compared to the hash done to the block 
+                  //genesis block has no pervious hash, block is only compared to the hash done to the block
                   if (obj.height == 0){
                     // Comparing the hash we just created (validBlockHash) with the hash in the block
                     if (obj.hash === validBlockHash){
@@ -196,16 +174,16 @@ class Blockchain{
                       resolve(StringEnder);
                     }
                   }else{
-                  // if not genesis block, get the pevious block by subtracting one from the height 
+                  // if not genesis block, get the pevious block by subtracting one from the height
                   db.getLevelDBData(obj.height - 1).then((priorHash) => {
                     if (!priorHash){
                       console.log("Error getting next Block")
                       }else{
-                        // make the previous block into a object 
+                        // make the previous block into a object
                         var Newobj = JSON.parse(priorHash);
                         // Full vaildation of the block:
                         // 1.Compare main block hash and next block previous hash
-                        // 2.Compare Hash just create and hash already in the block 
+                        // 2.Compare Hash just create and hash already in the block
                         if (Newobj.hash === obj.previousBlockHash && validBlockHash === obj.hash){
                           // Reach the end of the chain and resolve the promise with a vaild string
                           if (result - 2 == CorrectCounter){
@@ -227,9 +205,9 @@ class Blockchain{
               }).catch((err) => { console.log(err);});
             }
           }
-          
+
       }).catch((err) => { console.log(err); });
-      
+
     })
   }
 
@@ -246,7 +224,7 @@ class Blockchain{
       return new Promise(resolve => {
         db.getBlocksCount().then((result) => {
           if (!result){
-            console.log('Error With getting hash')
+						resolve(false);
           }else{
             resolve(result);
           }
@@ -254,12 +232,12 @@ class Blockchain{
       });
     }
 
-  
+
 /* ============= Get a single block of the block chain ===================
 |   -Function within Blockchain class to get a speific block on the chain |
 |    -Uses getLevelDBData to reateive block from leveldb                  |
 |    INPUT                                                                |
-|        intager used to get specific block                               | 
+|        intager used to get specific block                               |
 |    OUTPUT                                                               |
 |        block object as a promise                                        |
 |  ======================================================================*/
@@ -290,7 +268,6 @@ class Blockchain{
       return new Promise(resolve => {
         db.getChain().then((chain) => {
           if (!chain){
-            console.log('Error With getting Chain')
             resolve("Cant sync chain");
           }else{
             resolve(chain);
@@ -311,8 +288,8 @@ const PrivateChain = new Blockchain;
 
 //Note that in version 4 of express, express.bodyParser() was
 //deprecated in favor of a separate 'body-parser' module.
-app.use(bodyParser.urlencoded({ extended: true })); 
-//require sanitize as a middleware with express 
+app.use(bodyParser.text({ type:'application/json'}));
+//require sanitize as a middleware with express
 app.use(require('sanitize').middleware);
 
 
@@ -327,31 +304,47 @@ app.use(require('sanitize').middleware);
 |   OUTPUT                                                                  |
 |      response: JSON object                                                |
 |==========================================================================*/
-
+//get endpoint url /block/(integer)
 app.get('/block/:index',async function(req,res){
+	// try getting block data, easy error handling
   try{
+		// get current chain height
     var ChainHeight = await PrivateChain.getHeight();
-    H = ChainHeight - 1;
-    var BlockNumber = req.paramInt('index');
-    res.setHeader('Content-Type','text/json');
-    if (BlockNumber || BlockNumber == 0){
-        if (BlockNumber >= ChainHeight){
-          var ErrorString = 'Block request is out of range. Current Height is '+ H +'.'
-          res.status(400);
-          res.json({'Error':ErrorString});
-          res.end();
-        }else{
-          var x = await PrivateChain.getBlock(BlockNumber);
-          var Block_data = JSON.parse(x)
-          res.status(200);
-          res.json(Block_data);
-          res.end();
-    }
-    }else{
-    res.status(400);
-    res.json({'Error':'Please enter a number.'});
-    res.end();
-  }
+		// if false, no blocks exist / handling error
+		if (ChainHeight == false){
+			res.status(418); // I'm a Teapot ?
+			res.json({'Error':'No blocks exist on the chain'});
+			res.end();
+		}else{
+				// adjust index to get the correct block
+		    H = ChainHeight - 1;
+				// check userdata is a integer
+		    var BlockNumber = req.paramInt('index');
+				// set header content-type being json
+		    res.setHeader('Content-Type','text/json');
+				// Error handling for user data or block height being zero
+		    if (BlockNumber || BlockNumber == 0){
+						// Error handling if block requested is out of range
+		        if (BlockNumber >= ChainHeight){
+		          var ErrorString = 'Block request is out of range. Current Height is '+ H +'.'
+		          res.status(400); // Bad request
+		          res.json({'Error':ErrorString});
+		          res.end();
+		        }else{
+							// all is good, await to get the block by passing in user integer
+		          var x = await PrivateChain.getBlock(BlockNumber);
+		          var Block_data = JSON.parse(x)
+		          res.status(200); // Ok
+		          res.json(Block_data);
+		          res.end();
+		    }
+		    }else{
+		    res.status(400);
+		    res.json({'Error':'Please enter a number.'});
+		    res.end();
+		  }
+		}
+	// if try fails, something on the back end broke
 }catch{
   res.status(500);
   res.json({'Server':'Oops I broke!'});
@@ -360,34 +353,42 @@ app.get('/block/:index',async function(req,res){
 });
 
 
- 
+
 /*======================== post request to add blocks to the chain ===============================
 |    -check if request body variable is a string or nothing                                       |
 |    -a new block is created and add to the chain with body of the block being the request string |
-|    -data is sent with x-www-form-urlencoded within the body of the request                      |
+|    -data is raw within the body of the request                      |
 |    INPUT                                                                                        |
 |        request: string                                                                          |
 |    OUTPUT                                                                                       |
 |        response: JSON (object)                                                                  |
 |================================================================================================*/
+// post endpoint url /blocks
 app.post('/block',async function(req,res) {
-  console.log(req.body);
+	// try for easy error handling on the back end
   try{
-    var data = req.bodyString('BlockBody');
+		// user input treated as JSON object
+		// found req.body.body to be a little confusing so I cut it up
+		var string = JSON.parse(req.body)
+    var data = string.body;
+		// Error handling
     if (!data || data.length == 0){
       res.status(400);
       res.setHeader('Content-Type','text/json',);
       res.json({'BlockStatus': 'Failed (If this persist please revert to projects readme for example)'});
-      res.end(); 
+      res.end();
     }else{
+			//create new block with body of user string
+			// respond back to client that block was Successfully added
       res.status(200);
       const BlockModel = new Block;
       BlockModel.body = data
       PrivateChain.addBlock(BlockModel);
       res.setHeader('Content-Type','text/json',);
       res.json({'BlockStatus': 'Successful'});
-      res.end();  
+      res.end();
     }
+		//back end error handling
   }catch{
     res.status(500);
     res.json({'Server':'Oops I broke!'});

@@ -26,7 +26,7 @@ npm install level --save
 ```
 #### Web API
 
-- Install fs 
+- Install fs
 ```
 npm install fs
 ```
@@ -34,7 +34,7 @@ npm install fs
 ```
 npm install express
 ```
-- Install bodyParser 
+- Install bodyParser
 ```
 npm install body-parser
 ```
@@ -52,7 +52,7 @@ project3-----|
              |----RESTful_api.js
              |
              |
-             |----chaindata 
+             |----chaindata
                       |
                       |---files to store the blockchain (NOT ADVISED TO CHANGE INSIDE CHAINDATA)
              |
@@ -74,9 +74,8 @@ BlockChain class contains asynchronous functions that handle the creation of the
 
 ---
 
-### NEW
 
-Express framework was used to create a RESTful api that accepts a get and post request. The get endpoint receives data through the URL path with a block height parameter. Example to get block zero <a href= http://localhost:8000/block/0>http://localhost/block/0</a>. This will return a JSON object of the block. Post endpoint receives data in the http payload as x-www-form-urlencoded. That data is then used as the block body, which is added to the chain.
+Express framework was used to create a RESTful api that accepts a get and post request. The get endpoint receives data through the URL path with a block height parameter. Example to get block zero <a href= http://localhost:8000/block/0>http://localhost/block/0</a>. This will return a JSON object of the block. Post endpoint receives data in the http payload as raw. That data is then used as the block body, which is added to the chain.
 
 ---
 
@@ -108,13 +107,13 @@ Express Web Service            Blockchain class           leveldb class
 ```
 
 
-#### Creating blocks/Genesis block and saving to leveldb 
+#### Creating blocks/Genesis block and saving to leveldb
 
- 
+
 A check is done in the constructor of the BlockChain class that Promises to get the height of the saved chain. Using a leveldb function called getBlockCount() line[82 - 95] if nothing is returned a genesis block is created. Else we use the height to create a new block with the height of the last block created.
 
 
-Using BlockCreator function to create new blocks line[292 - 310]. A timing and interval function that creates a defined amount of new block, that is passed to addBlock within in BlockChain class. addBlocks will then set block height, time, previousBlockhash and then a hash of the block itself. This is then passed to addDataToLevelDB within leveldb class to be saved. 
+Using BlockCreator function to create new blocks line[292 - 310]. A timing and interval function that creates a defined amount of new block, that is passed to addBlock within in BlockChain class. addBlocks will then set block height, time, previousBlockhash and then a hash of the block itself. This is then passed to addDataToLevelDB within leveldb class to be saved.
 
 ```
 BlockCreator()
@@ -122,7 +121,7 @@ BlockCreator()
       |--addBlock()
             |
             |-- addDataToLevelDB()
-      
+
 ```
 
 #### Validate Block / Validate Chain
@@ -145,13 +144,13 @@ validateChain()
       |--getBlocksCount()
      then
       |
-      |--getLevelDBData() 
+      |--getLevelDBData()
 ```
 
 #### get Block / chain height
 
 
-getHeight function found in BlockChain Class utilizes getBlocksCount to return the height of the chain. 
+getHeight function found in BlockChain Class utilizes getBlocksCount to return the height of the chain.
 
 ```
 getHeight()
@@ -168,9 +167,7 @@ getBlock()
 
 ---
 
-### NEW
-
-Get request for a specific block is made through the block chain class to first get the height of the chain, then the block it self. 
+Get request for a specific block is made through the block chain class to first get the height of the chain, then the block it self.
 ```
 app.get('/block/:index')
       |
@@ -190,14 +187,14 @@ app.post('/block')
 
 
 
-### Managing the Private Blockchain 
+### Managing the Private Blockchain
 
 
 #### RESTful_api.js
 
 To use RESTful_api.js to manage the blockchain use lines 313-328 for creating and validation.
 
-First call out BlockCreator to generate some blocks. The two inputs are timing between block being created and amount of blocks to be created. 
+First call out BlockCreator to generate some blocks. The two inputs are timing between block being created and amount of blocks to be created.
 Recommend to stay above 1 sec per block (1 sec == 1000)
 
 <u>NOTE</u> this will generate chaindata folder.
@@ -206,7 +203,7 @@ Recommend to stay above 1 sec per block (1 sec == 1000)
 // Used to create blocks
 BlockCreator(1000,5);
 ```
-After creating blocks the functions below are available. 
+After creating blocks the functions below are available.
 ```
 //validateChain
 PrivateChain.validateChain();
@@ -228,22 +225,18 @@ PrivateChain.getBlock(1);
 
 ---
 
-### NEW
-
 #### Error Handling / Sanitize user input
 
-Handling errors is done through out both endpoints. Both have a appropriate response if the server stops working (500) with a message to the client. 
+Handling errors is done throughout both endpoints. Both have appropriate responses if the server stops working (500) with a message to the client.
 ```
 500 Internal Server Error
-Time:88 ms
-Size:257 B
 
 {
     "Server": "Oops I broke!"
 }
 ```
 Get request first sanitizes user input checking if its not a integer, if so response bad request (400) is sent back with a message. Else
-check if the block requested existences, if so return block object (200). Else bad request (400) is sent to client also telling how high the chain currently is. 
+check if the block requested exist, if so return block object (200). Else bad request (400) is sent to client, also telling how high the chain currently is.
 
 ```
 //Tried to send a string
@@ -270,8 +263,8 @@ check if the block requested existences, if so return block object (200). Else b
 
 ```
 
-Post request also sanitizes user input by forcing the data to a string, then checking the length of the string is greater then zero. If so bad request (400) with a message is sent to client. Else
-message is sent block was successfully added (200).
+Post request checks the length of the string is greater then zero. If so, bad request error (400) with a message is sent to client. Else
+message is sent "block was successfully added" (200).
 
 ```
 //Nothing in the string
@@ -290,11 +283,11 @@ message is sent block was successfully added (200).
 
 ---
 
-### NEW
+### Using the API
 
-#### Using the api
 
-##### Get request for a block 
+
+#### Get request for a block
 
 Getting a block is done through the url. After the last forward slash represents a block by height /block/{height}. JSON object is returned representing the block.
 
@@ -303,31 +296,36 @@ Example URL: http://localhost:8000/block/0
 
 
 
-##### Post request to add blocks
+#### Post request to add blocks
 
-Data must be encoded with x-www-form-urlencoded. Name attribute of the input text MUST have the name="BlockBody". JSON object message is returned telling whether adding a block was successful.
+Creating a block is done with a post request raw JSON in body, through the url path /block.
+Example post
 
-Example HTML code to post data to API
 ```
-<form action="http://localhost:8000/block" method="post" enctype="application/x-www-form-urlencoded">
-  Body data to be sent to be added to a a new block: <input type="text" name="BlockBody"><br>
-  <input type="submit" value="Submit">
-</form>
+{
+"body": "Testing block with test string data"
+}
 ```
-<b>NOTE</b> tested and developed with <a href ="https://www.getpostman.com/" >postman</a> 
+JSON object message is returned telling whether adding a block was successful.
+
+
+![alt text](image.png "Post man")
+
+
+<b>NOTE</b> tested and developed with <a href ="https://www.getpostman.com/" >postman</a>
 
 #### Running the server
 Starting the web server
 first cd into project repository ``` cd Project_3 ```
-run 
+run
 ```
 node RESTful_api.js
 ```
 The server will be listing on 8000 for a client connection.
 
+---
 
-### Potential Short Comings
+### NEW
 
-If a large amount of blocks where to be created memory would eventually be filled. To solve this either set a limit on how many blocks can be in memory. Or have no blocks in memory, they would be directly saved to the database.
-
-
+#### Changes
+Removed the constructor from the blockchain class and was incorporeted into the add block function. This fixed two major problems. First removes blocks being added to memory. Second prevents a automatic genesis block being created.
