@@ -322,10 +322,11 @@ run
 node RESTful_api.js
 ```
 The server will be listing on 8000 for a client connection.
+socket: http://127.0.0.1:8000/
 
 ---
 
 ### NEW
 
 #### Changes
-Removed the constructor from the blockchain class and was incorporeted into the add block function. This fixed two major problems. First removes blocks being added to memory. Second prevents a automatic genesis block being created.
+Removed the constructor from the blockchain class and was incorporated into the add block function. This fixed two major problems. First removes blocks being added to memory. Second prevents a automatic genesis block being created.
