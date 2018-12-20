@@ -10,6 +10,7 @@ class leveldb {
   constructor() {
     this.db = level(chainDB);
   }
+  
 // Add data to levelDB with key and value (Promise)
 addLevelDBData(key, value) {
   let self = this;
@@ -90,7 +91,6 @@ getBlocksCount() {
 
 // Only Used for app.js 
 // Allow the client to view the blockchain
-// TODO FIX THE ERROR
 getChain() {
   let self = this;
   var BC = [];

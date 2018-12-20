@@ -62,7 +62,7 @@ project3-----|
 
 #### levelSandbox.js
 
-Contains leveldb class, this allows blocks on the chain to be persistent. The functions within the class are asynchronous meaning multiple operations can occur at once. Asynchronous operations are done through <a href = "https://developers.google.com/web/fundamentals/primers/promises">Promises </a> witch have to be dealt with appropriately.
+Contains leveldb class, this allows blocks on the chain to be persistent. The functions within the class are asynchronous meaning multiple operations can occur at once. Asynchronous operations are done through <a href = "https://developers.google.com/web/fundamentals/primers/promises">Promises </a> which have to be dealt with appropriately.
 
 #### RESTful_api.js
 
@@ -70,7 +70,7 @@ Consist of two classes, Block class and Blockchain class. Together creates a fun
 
 Block class consist of only a constructor that describes the block object (hash,height,body,time,previousBlockHash).
 
-BlockChain class contains asynchronous functions that handle the creation of the chain and the management of blocks on the chain. The reason for Blockchain functions to return Promise it allows the data from leveldb to be used without having unknown variables.
+BlockChain class contains asynchronous functions that handles the creation and management of blocks on the chain.
 
 ---
 
@@ -79,10 +79,9 @@ Express framework was used to create a RESTful api that accepts a get and post r
 
 ---
 
-#### chaindata
+#### Chaindata
 
-Blockchain data is stored. If a block is changed or a new chain is needed, chaindata folder can be deleted.
-
+Storage of blockchain data.
 
 #### README.md
 
@@ -93,13 +92,13 @@ Your reading it!
 
 Express Web Service            Blockchain class           leveldb class
       |                             |                          |
-      |--app.get()                  |--addBlock()              |-- addLevelDBData()
+      |--app.listen()               |--addBlock()              |-- addLevelDBData()
       |                             |                          |
-      |--app.post()                 |--validateBlock()         |-- changeDBDate()
+      |--app.get()                  |--validateBlock()         |-- changeDBDate()
       |                             |                          |
-                                    |--validateChain()         |-- getLevelDBData()
-                                    |                          |
-                                    |--getHeight()             |-- addDataToLevelDB()
+      |--app.post()                 |--validateChain()         |-- getLevelDBData()
+      |                             |                          |
+      |--clientErrorHandler()       |--getHeight()             |-- addDataToLevelDB()
                                     |                          |
                                     |--getBlock()              |-- getBlockCount()
                                                                |
@@ -109,42 +108,84 @@ Express Web Service            Blockchain class           leveldb class
 
 #### Creating blocks/Genesis block and saving to leveldb
 
+AddBlock function takes in a block object. Then checking the height of the saved chain determines a genesis block or exsiting block. If height is zero, there are no blocks on the chain therefore a genesis block will be created. Otherwise the last block of the saved chain is used to link the new block to the chain.
 
-A check is done in the constructor of the BlockChain class that Promises to get the height of the saved chain. Using a leveldb function called getBlockCount() line[82 - 95] if nothing is returned a genesis block is created. Else we use the height to create a new block with the height of the last block created.
-
-
-Using BlockCreator function to create new blocks line[292 - 310]. A timing and interval function that creates a defined amount of new block, that is passed to addBlock within in BlockChain class. addBlocks will then set block height, time, previousBlockhash and then a hash of the block itself. This is then passed to addDataToLevelDB within leveldb class to be saved.
-
-```
-BlockCreator()
-      |
-      |--addBlock()
-            |
-            |-- addDataToLevelDB()
+``` javascript
+    if (result == 0){ 
+        newBlock.previousBlockHash = "";
+                newBlock.height = result;
+                newBlock.time = new Date().getTime().toString().slice(0,-3);
+                newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+        db.addDataToLevelDB(JSON.stringify(newBlock).toString());
+        resolve(newBlock);
+    }else{
+        db.getLevelDBData(result - 1).then((resultBlock) => {
+        var lastDBblock = JSON.parse(resultBlock);
+        var PH = lastDBblock.hash;
+        newBlock.previousBlockHash = PH;
+        newBlock.height = result;
+        newBlock.time = new Date().getTime().toString().slice(0,-3);
+        newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+        db.addDataToLevelDB(JSON.stringify(newBlock).toString());
+        resolve(newBlock);
 
 ```
 
 #### Validate Block / Validate Chain
 
 Validating a block is done in validateBlock in the BlockChain class.
-First requesting a block by its height with getLevelDBData. The next step is to rehash the block to compare the hash in the block. If the hashes are not equal then the block has been change therefore invalid.
+First a specific block is requested by its height with getLevelDBData. Second the existing hash is removed and stored. Enabling rehashing of that block to compare the stored hash. If the hashes are not equal then the block has been change therefore invalid.
 
+
+```javascript
+
+        var obj = JSON.parse(block); 
+        var blockhash = obj.hash;
+        obj.hash = "";
+        var validBlockHash = SHA256(JSON.stringify(obj)).toString();
+        obj.hash = blockhash;
+        if (obj.hash === validBlockHash){
+            resolve("Valid");
+        }else{
+            resolve("Invalid");
+        }
 
 ```
-validateBlock()
-      |
-      |--getLevelDBData()
-```
 
-Validating the chain starts by requesting the height of the chain getBlockCount in leveldb. Then looping the the range of the blocks with getLevelDBData and comparing two things. First the last blocks hash with the current blocks previous hash and like validating a single block, rehashing the block. Only if both are true the chain is valid.
-
-```
-validateChain()
-      |
-      |--getBlocksCount()
-     then
-      |
-      |--getLevelDBData()
+Validating the chain starts by requesting the height of the chain. Then looping the the range of the blocks and comparing two things. First the last blocks hash with the current blocks previous hash. Second, rehashing the block similiar to validating a single block. Only if both are true the chain is valid. The way the function returns the promise is done by first to resolve.
+``` javascript
+          var CorrectCounter = 0;
+            for (var a = 1; a < result + 1; a++){
+              db.getLevelDBData(a - 1).then((hash) => {
+                var obj = JSON.parse(hash);
+                var blockhash = obj.hash;
+                obj.hash = "";
+                var validBlockHash = SHA256(JSON.stringify(obj)).toString();
+                obj.hash = blockhash;
+                if (obj.height == 0){
+                  if (obj.hash === validBlockHash){
+                    // Genesis block is valid wait for the Promise
+                  }else{
+                    var StringEnder = "Chain invalid, please check block "+obj.height;
+                    resolve(StringEnder);
+                  }
+                }else{
+                  db.getLevelDBData(obj.height-1).then((priorHash) => {
+                        var Newobj = JSON.parse(priorHash);
+                        if (Newobj.hash === obj.previousBlockHash && validBlockHash === obj.hash){
+                          if (result - 2 == CorrectCounter){
+                            resolve("CHAIN VALID")
+                          }
+                          CorrectCounter += 1;
+                        }else{
+                          var prior = obj.height - 1
+                          var StringEnder = "Chain invalid, please check blocks "+obj.height+" and "+prior;
+                          resolve(StringEnder);
+                        }
+                  }).catch(function(err){
+                    reject(err);
+                });
+                };
 ```
 
 #### get Block / chain height
@@ -152,37 +193,57 @@ validateChain()
 
 getHeight function found in BlockChain Class utilizes getBlocksCount to return the height of the chain.
 
-```
-getHeight()
-    |
-    |--getBlocksCount()
+```javascript 
+
+          db.getBlocksCount().then((result) => {
+              resolve(result);
+          }).catch(function(err){
+              reject(err);
+          });
+
 ```
 getBlock function found in BlockChain class uses getLevelDBData to return a specific block.
 
-```
-getBlock()
-    |
-    |--getLevelDBData()
+```javascript
+        db.getLevelDBData(BlockN).then((result) => {
+            resolve(result);
+        }).catch(function(err){
+            reject(err);
+        });
 ```
 
 ---
 
-Get request for a specific block is made through the block chain class to first get the height of the chain, then the block it self.
+Get endpoint for a specific block is done by getting the height of the chain and block. The height of the chain allows for proper error handling for whether the chain or block exist. User input is also sanitized to make sure it's a number.   
+``` javascript
+PrivateChain.getHeight().then((ChainHeight) => {
+      if (ChainHeight > 0){
+        var CorrectIndex = ChainHeight - 1;
+        var BlockNumber = req.paramInt('index');
+        BlockNumber = parseInt(BlockNumber);
+        Boolofvalue = isNaN(BlockNumber);
+        if (Boolofvalue == false){
+          if (BlockNumber < ChainHeight){
+            PrivateChain.getBlock(BlockNumber).then((Blockstring) => {
+            var Block_data = JSON.parse(Blockstring);
+            res.status(200); 
+            res.json(Block_data);
+            res.end();
 ```
-app.get('/block/:index')
-      |
-      |--getHeight()
-      |
-      |--getBlock()
-            |
-            |--getLevelDBData()
-
-```
-Post request to create new block is made through the block chain class, add block.
-```
-app.post('/block')
-      |
-      |--addBlock()
+Post endpoint that enables the creation of new block is made through the block chain class, "addblock". Payload content is validated before creating and adding to the chain.
+``` javascript
+var string = JSON.parse(req.body)
+    var data = string.body;
+    if (data.length == 0){
+      clientErrorHandler(400,req,res);
+    }else{
+      const BlockModel = new Block;
+      BlockModel.body = data
+      PrivateChain.addBlock(BlockModel).then((createdBlock) => {
+      res.status(200);
+      res.setHeader('Content-Type','text/json',);
+      res.json(createdBlock);
+      res.end();
 ```
 
 
@@ -192,94 +253,71 @@ app.post('/block')
 
 #### RESTful_api.js
 
-To use RESTful_api.js to manage the blockchain use lines 313-328 for creating and validation.
 
-First call out BlockCreator to generate some blocks. The two inputs are timing between block being created and amount of blocks to be created.
-Recommend to stay above 1 sec per block (1 sec == 1000)
-
-<u>NOTE</u> this will generate chaindata folder.
-
-```
-// Used to create blocks
-BlockCreator(1000,5);
-```
 After creating blocks the functions below are available.
 ```
 //validateChain
 PrivateChain.validateChain();
 ```
-Input: block you want to validate.
+
 ```
 //validateBlock
+//Input: block you want to validate.
 PrivateChain.validateBlock(1);
 ```
 ```
 //Get height of chain
 PrivateChain.getHeight();
 ```
-Input: block you want to inspect.
+
 ```
 //Get single Block
+//Input: block you want to inspect.
 PrivateChain.getBlock(1);
+```
+```
+//Get entire chain
+//This is only for visual purposes 
+PrivateChain.ChainRecon();
 ```
 
 ---
 
 #### Error Handling / Sanitize user input
 
-Handling errors is done throughout both endpoints. Both have appropriate responses if the server stops working (500) with a message to the client.
-```
-500 Internal Server Error
+Handling errors is done through the clientErrorHandler function. Allows for server and clients errors to be handled appropriately.
 
-{
-    "Server": "Oops I broke!"
-}
-```
-Get request first sanitizes user input checking if its not a integer, if so response bad request (400) is sent back with a message. Else
-check if the block requested exist, if so return block object (200). Else bad request (400) is sent to client, also telling how high the chain currently is.
 
-```
-//Tried to send a string
-400 Bad request
-{
-    "Error": "Please enter a number."
-}
+```javascript
+function clientErrorHandler(err, req, res, parms){
+  if (err == 500){
+    res.status(err);
+    res.json({'Server':'Oops I broke!'});
+    res.end();
+  }else if (err == 400){
+    res.status(err);
+    res.json({'Error': 'Block failed to be created and add to chain (If this persist please revert to projects readme for example)'});
+    res.end();
+  } else if (err == 404){
+    res.status(err);
+    res.json({'Error':'No blocks exist on the chain'});
+    res.end();
+  } else if (err == 406){
+    res.status(err);
+    res.json({'Error':'Please enter a number.'});
+    res.end();
+  } else if (err == 409){
+    let ErrorString = 'Block request is out of range. Current Height is '+ parms +'.'
+	res.status(err); 
+	res.json({'Error':ErrorString});
+	res.end();
+  }
 
-//Successful request
-200  OK
-{
-    "hash": "71d3c5fab59044afefef8ecf13ecc3e8d750af17788274601dd39cb41ff22f4f",
-    "height": 0,
-    "body": "First block in the chain - Genesis block",
-    "time": "1545076056",
-    "previousBlockHash": ""
-}
-
-//Block doesnt existence
-400 Bad request
-{
-    "Error": "Block request is out of range. Current Height is 55."
-}
-
+};
 ```
 
-Post request checks the length of the string is greater then zero. If so, bad request error (400) with a message is sent to client. Else
-message is sent "block was successfully added" (200).
 
-```
-//Nothing in the string
-400 Bad request
-{
-    "BlockStatus": "Failed (If this persist please revert to projects readme for example)"
-}
 
-// Block successfully added with data body from client
-200 OK
-{
-    "BlockStatus": "Successful"
-}
-
-```
 
 ---
 
@@ -296,20 +334,17 @@ Example URL: http://localhost:8000/block/0
 
 
 
-#### Post request to add blocks
+#### Post request to add block
 
-Creating a block is done with a post request raw JSON in body, through the url path /block.
-Example post
+Creating a block uses the data payload option through the url path /block. The data payload is sent raw with content being application JSON. The newly created block is then sent back to the user.
+
+<b>Example post request.</b>
 
 ```
 {
 "body": "Testing block with test string data"
 }
 ```
-JSON object message is returned telling whether adding a block was successful.
-
-
-![alt text](image.png "Post man")
 
 
 <b>NOTE</b> tested and developed with <a href ="https://www.getpostman.com/" >postman</a>
@@ -326,7 +361,3 @@ socket: http://127.0.0.1:8000/
 
 ---
 
-### NEW
-
-#### Changes
-Removed the constructor from the blockchain class and was incorporated into the add block function. This fixed two major problems. First removes blocks being added to memory. Second prevents a automatic genesis block being created.

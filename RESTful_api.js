@@ -129,7 +129,7 @@ class Blockchain{
                 obj.hash = blockhash;
                 if (obj.height == 0){
                   if (obj.hash === validBlockHash){
-                    // Do Nothing hashes match wait for the Promise
+                    // Do Nothing, hashes match wait for the Promise
                   }else{
                     var StringEnder = "Chain invalid, please check block "+obj.height;
                     resolve(StringEnder);
@@ -144,7 +144,7 @@ class Blockchain{
                           CorrectCounter += 1;
                         }else{
                           var prior = obj.height - 1
-                          var StringEnder = "CHAIN invalid, please check blocks "+obj.height+" and "+prior;
+                          var StringEnder = "Chain invalid, please check blocks "+obj.height+" and "+prior;
                           resolve(StringEnder);
                         }
                   }).catch(function(err){
@@ -237,8 +237,7 @@ const PrivateChain = new Blockchain;
 app.use(bodyParser.text({ type:'application/json'}));
 //require sanitize as a middleware with express
 app.use(require('sanitize').middleware);
-
-app.use(clientErrorHandler)
+app.use(clientErrorHandler);
 
 function clientErrorHandler(err, req, res, parms){
   if (err == 500){
@@ -270,11 +269,11 @@ function clientErrorHandler(err, req, res, parms){
 
 /*====================== get request to get a single block ==================
 |   - check if requested variable (H) is a intager                          |
-|   - chain height is compared to the requested block, to check existences  |
-|   - if variable is a intager and block existence JSON block object is sent|
+|   - chain height is compared to the requested block, to check existence   |
+|   - if variable is a integer and block existence JSON block object is sent|
 |   - else error is sent as JSON                                            |
 |   INPUT                                                                   |
-|      request: intager                                                     |
+|      request: integer                                                     |
 |   OUTPUT                                                                  |
 |      response: JSON object                                                |
 |==========================================================================*/
@@ -284,7 +283,7 @@ app.get('/block/:index',async function(req,res){
     res.setHeader('Content-Type','text/json');
     PrivateChain.getHeight().then((ChainHeight) => {
       if (ChainHeight > 0){
-        CorrectIndex = ChainHeight - 1;
+        var CorrectIndex = ChainHeight - 1;
         var BlockNumber = req.paramInt('index');
         BlockNumber = parseInt(BlockNumber);
         Boolofvalue = isNaN(BlockNumber);
