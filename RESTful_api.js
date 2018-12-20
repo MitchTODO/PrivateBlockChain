@@ -42,42 +42,33 @@ class Blockchain{
 |  =====================================================*/
 
   addBlock(newBlock){
-		// get height of db, this allow to add block to db without deletion of chain
-		db.getBlocksCount().then((result) => {
-			// If nothing create a genesis block
-			if(!result) {
-
-				newBlock.previousBlockHash = "";
-				newBlock.height = result;
-				newBlock.time = new Date().getTime().toString().slice(0,-3);
-				newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-				// Chain in memory
-				// Chain in db
-				db.addDataToLevelDB(JSON.stringify(newBlock).toString());
-				// else create a new block with the correct height
-				// NOTE this means a new block will be add when constucting Blockchain class
-				}else {
-					db.getLevelDBData(result - 1).then((resultBlock) => {
-						if(!resultBlock){
-							console.log('Cant ID last DB block');
-							//create new block with the height + 1 of last block added to db
-							// the new block is add to database chain and memory chain
-						}else{
-							var lastDBblock = JSON.parse(resultBlock);
-							var PH = lastDBblock.hash;
-							newBlock.previousBlockHash = PH;
-							newBlock.height = result;
-							newBlock.time = new Date().getTime().toString().slice(0,-3);
-							newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-
-							// Chain in db
-							db.addDataToLevelDB(JSON.stringify(newBlock).toString());
-
-						}
-					 }).catch((err) => { console.log(err); });
-
-				}
-		}).catch((err) => { console.log(err); });
+    return new Promise(function(resolve, reject) {
+      db.getBlocksCount().then((result) => {
+        if (result == 0){ 
+            newBlock.previousBlockHash = "";
+				    newBlock.height = result;
+				    newBlock.time = new Date().getTime().toString().slice(0,-3);
+				    newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+            db.addDataToLevelDB(JSON.stringify(newBlock).toString());
+            resolve(newBlock);
+        }else{
+            db.getLevelDBData(result - 1).then((resultBlock) => {
+            var lastDBblock = JSON.parse(resultBlock);
+            var PH = lastDBblock.hash;
+            newBlock.previousBlockHash = PH;
+            newBlock.height = result;
+            newBlock.time = new Date().getTime().toString().slice(0,-3);
+            newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
+            db.addDataToLevelDB(JSON.stringify(newBlock).toString());
+            resolve(newBlock);
+					 }).catch(function(err){
+            reject(err);
+          })
+        }
+      }).catch(function(err){
+        reject(err);
+    })
+  })
 
   }
 
@@ -93,34 +84,22 @@ class Blockchain{
 |  ========================================================================*/
 
       validateBlock(blockHeight){
-        return new Promise(resolve => {
-        // get requested block
-        db.getLevelDBData(blockHeight).then((block) => {
-          if (!block){
-            resolve("A Error occurred, please check block range");
-          }else{
-            // Turn block into object
+        return new Promise(function(resolve,reject) {
+          db.getLevelDBData(blockHeight).then((block) => {
             var obj = JSON.parse(block);
-            // Hold block hash
             var blockhash = obj.hash;
-            // make block hash empty sting
             obj.hash = "";
-            // rehash the block
             var validBlockHash = SHA256(JSON.stringify(obj)).toString();
-            // put back hash for validation
             obj.hash = blockhash;
-            // compare hashes and validate the block
             if (obj.hash === validBlockHash){
-              var CorrectString = ("Block #"+obj.height+" is validated and intacted")
-              console.log('\x1b[32m%s\x1b[0m',CorrectString);
               resolve("Valid");
             }else{
-              console.log('\x1b[31m%s\x1b[0m',"WARNING block #"+obj.height+" has been tampered with or corrupt. Please check chain integerite using validateChain()");
               resolve("Invalid");
             }
-      }
-    });
-  });
+        }).catch(function(err){
+          reject(err);
+      })
+    })
   }
 
 
@@ -137,78 +116,50 @@ class Blockchain{
 |  ================================================================================================================================*/
 
     validateChain(){
-      return new Promise(resolve => {
-        //get the height of the chain
-      db.getBlocksCount().then((result) => {
-        if(!result) {
-          console.log('Error with getting chain height within validateChain');
-          }else {
-            var CorrectCounter = 0;
+      return new Promise(function(resolve,reject) {
+        db.getBlocksCount().then((result) => {
+          var CorrectCounter = 0;
             // loop through each block from block one used to compare pervious hash
-            for (var a = 0; a < result + 1; a++){
-              // get blocks value used to compare
-              // NOTE Block objects are returns as strings
-              db.getLevelDBData(a-1).then((hash) => {
-                if (!hash){
-                  console.log('Error With getting block within validateChain')
-                }else{
-                  //Turn string back into block object
-                  var obj = JSON.parse(hash);
-                  // Hold block hash for comparing
-                  var blockhash = obj.hash;
-                  // remove hash from block object
-                  obj.hash = "";
-                  // Hash block with SHA256 to compare with hash in block
-                  var validBlockHash = SHA256(JSON.stringify(obj)).toString();
-                  // put back object hash that was removed
-                  obj.hash = blockhash;
-                  //genesis block has no pervious hash, block is only compared to the hash done to the block
-                  if (obj.height == 0){
-                    // Comparing the hash we just created (validBlockHash) with the hash in the block
-                    if (obj.hash === validBlockHash){
-                      console.log("genesis Block Valid")
-                    }else{
-                      console.log("genesis block invalid")
-                      // if genesis is invalid we resolve the promise with string and block height
-                      var StringEnder = "Chain invalid, please check block "+obj.height;
-                      resolve(StringEnder);
-                    }
+            for (var a = 1; a < result + 1; a++){
+              db.getLevelDBData(a - 1).then((hash) => {
+                var obj = JSON.parse(hash);
+                var blockhash = obj.hash;
+                obj.hash = "";
+                var validBlockHash = SHA256(JSON.stringify(obj)).toString();
+                obj.hash = blockhash;
+                if (obj.height == 0){
+                  if (obj.hash === validBlockHash){
+                    // Do Nothing hashes match wait for the Promise
                   }else{
-                  // if not genesis block, get the pevious block by subtracting one from the height
-                  db.getLevelDBData(obj.height - 1).then((priorHash) => {
-                    if (!priorHash){
-                      console.log("Error getting next Block")
-                      }else{
-                        // make the previous block into a object
+                    var StringEnder = "Chain invalid, please check block "+obj.height;
+                    resolve(StringEnder);
+                  }
+                }else{
+                  db.getLevelDBData(obj.height-1).then((priorHash) => {
                         var Newobj = JSON.parse(priorHash);
-                        // Full vaildation of the block:
-                        // 1.Compare main block hash and next block previous hash
-                        // 2.Compare Hash just create and hash already in the block
                         if (Newobj.hash === obj.previousBlockHash && validBlockHash === obj.hash){
-                          // Reach the end of the chain and resolve the promise with a vaild string
                           if (result - 2 == CorrectCounter){
                             resolve("CHAIN VALID")
                           }
-                          // counter for chain position
                           CorrectCounter += 1;
-                        // if block or previous block is invaild, resolve promise with string with blocks that are invalid
                         }else{
-                          console.log("Check prior hash match with blocks:",obj.height, "&",obj.height -1  )
                           var prior = obj.height - 1
                           var StringEnder = "CHAIN invalid, please check blocks "+obj.height+" and "+prior;
                           resolve(StringEnder);
                         }
-                      }
-                  });
-                }
-                }
-              }).catch((err) => { console.log(err);});
-            }
-          }
+                  }).catch(function(err){
+                    reject(err);
+                });
+                };
+                }).catch(function(err){
+                  reject(err);
+              });
+            };
+        }).catch(function(err){
+          reject(err);
+      });
+    });
 
-      }).catch((err) => { console.log(err); });
-
-    })
   }
 
 /* ==================== Get the height of the block chain =======================
@@ -221,14 +172,12 @@ class Blockchain{
 |  ==============================================================================*/
 
     getHeight(){
-      return new Promise(resolve => {
-        db.getBlocksCount().then((result) => {
-          if (!result){
-						resolve(false);
-          }else{
-            resolve(result);
-          }
-        });
+      return new Promise(function(resolve, reject) {
+          db.getBlocksCount().then((result) => {
+              resolve(result);
+          }).catch(function(err){
+              reject(err);
+          });
       });
     }
 
@@ -243,15 +192,14 @@ class Blockchain{
 |  ======================================================================*/
 
     getBlock(BlockN){
-      return new Promise(resolve => {
+      return new Promise(function(resolve,reject) {
         db.getLevelDBData(BlockN).then((result) => {
-          if(!result){
-          }else{
             resolve(result);
-          }
-        })
-      })
-    }
+        }).catch(function(err){
+            reject(err);
+        });
+      });
+    };
 
 
 /* ================= Get the entire block chain ====================
@@ -263,23 +211,21 @@ class Blockchain{
 |   OUTPUT                                                          |
 |        list of block objects as a promise                         |
 |  =================================================================*/
-
-    ChainRecon(){
-      return new Promise(resolve => {
-        db.getChain().then((chain) => {
-          if (!chain){
-            resolve("Cant sync chain");
-          }else{
-            resolve(chain);
-          }
+  ChainRecon(){
+    return new Promise(function(resolve,reject) {
+      db.getChain().then((chain) => {
+          resolve(chain);
+        }).catch(function(err){
+         reject(err);
         });
       });
-  }
+    };
 }
 
 
 // Create blockchain object
 const PrivateChain = new Blockchain;
+
 
 /* =============================================== Express API  ==================================================
 |   Below is a functional RESTful api, that clients can post and get data directly through the block chain class |
@@ -291,6 +237,34 @@ const PrivateChain = new Blockchain;
 app.use(bodyParser.text({ type:'application/json'}));
 //require sanitize as a middleware with express
 app.use(require('sanitize').middleware);
+
+app.use(clientErrorHandler)
+
+function clientErrorHandler(err, req, res, parms){
+  if (err == 500){
+    res.status(err);
+    res.json({'Server':'Oops I broke!'});
+    res.end();
+  }else if (err == 400){
+    res.status(err);
+    res.json({'Error': 'Block failed to be created and add to chain (If this persist please revert to projects readme for example)'});
+    res.end();
+  } else if (err == 404){
+    res.status(err);
+    res.json({'Error':'No blocks exist on the chain'});
+    res.end();
+  } else if (err == 406){
+    res.status(err);
+    res.json({'Error':'Please enter a number.'});
+    res.end();
+  } else if (err == 409){
+    var ErrorString = 'Block request is out of range. Current Height is '+ parms +'.'
+		res.status(err); 
+		res.json({'Error':ErrorString});
+		res.end();
+  }
+
+};
 
 
 
@@ -304,52 +278,39 @@ app.use(require('sanitize').middleware);
 |   OUTPUT                                                                  |
 |      response: JSON object                                                |
 |==========================================================================*/
-//get endpoint url /block/(integer)
+
+
 app.get('/block/:index',async function(req,res){
-	// try getting block data, easy error handling
-  try{
-		// get current chain height
-    var ChainHeight = await PrivateChain.getHeight();
-		// if false, no blocks exist / handling error
-		if (ChainHeight == false){
-			res.status(418); // I'm a Teapot ?
-			res.json({'Error':'No blocks exist on the chain'});
-			res.end();
-		}else{
-				// adjust index to get the correct block
-		    H = ChainHeight - 1;
-				// check userdata is a integer
-		    var BlockNumber = req.paramInt('index');
-				// set header content-type being json
-		    res.setHeader('Content-Type','text/json');
-				// Error handling for user data or block height being zero
-		    if (BlockNumber || BlockNumber == 0){
-						// Error handling if block requested is out of range
-		        if (BlockNumber >= ChainHeight){
-		          var ErrorString = 'Block request is out of range. Current Height is '+ H +'.'
-		          res.status(400); // Bad request
-		          res.json({'Error':ErrorString});
-		          res.end();
-		        }else{
-							// all is good, await to get the block by passing in user integer
-		          var x = await PrivateChain.getBlock(BlockNumber);
-		          var Block_data = JSON.parse(x)
-		          res.status(200); // Ok
-		          res.json(Block_data);
-		          res.end();
-		    }
-		    }else{
-		    res.status(400);
-		    res.json({'Error':'Please enter a number.'});
-		    res.end();
-		  }
-		}
-	// if try fails, something on the back end broke
-}catch{
-  res.status(500);
-  res.json({'Server':'Oops I broke!'});
-  res.end();
-}
+    res.setHeader('Content-Type','text/json');
+    PrivateChain.getHeight().then((ChainHeight) => {
+      if (ChainHeight > 0){
+        CorrectIndex = ChainHeight - 1;
+        var BlockNumber = req.paramInt('index');
+        BlockNumber = parseInt(BlockNumber);
+        Boolofvalue = isNaN(BlockNumber);
+        if (Boolofvalue == false){
+          if (BlockNumber < ChainHeight){
+            PrivateChain.getBlock(BlockNumber).then((Blockstring) => {
+            var Block_data = JSON.parse(Blockstring);
+            res.status(200); 
+            res.json(Block_data);
+            res.end();
+          }).catch(function(err){
+            clientErrorHandler(err,req,res);
+          });
+          }else{
+            clientErrorHandler(409,req,res,CorrectIndex);
+          }
+        }else{
+          clientErrorHandler(406,req,res);
+        }
+      }else{
+        clientErrorHandler(404,req,res);
+      }
+    }).catch(function(err){
+      
+      clientErrorHandler(err,req,res);
+  });
 });
 
 
@@ -365,35 +326,22 @@ app.get('/block/:index',async function(req,res){
 |================================================================================================*/
 // post endpoint url /blocks
 app.post('/block',async function(req,res) {
-	// try for easy error handling on the back end
-  try{
-		// user input treated as JSON object
-		// found req.body.body to be a little confusing so I cut it up
 		var string = JSON.parse(req.body)
     var data = string.body;
-		// Error handling
-    if (!data || data.length == 0){
-      res.status(400);
-      res.setHeader('Content-Type','text/json',);
-      res.json({'BlockStatus': 'Failed (If this persist please revert to projects readme for example)'});
-      res.end();
+    if (data.length == 0){
+      clientErrorHandler(400,req,res);
     }else{
-			//create new block with body of user string
-			// respond back to client that block was Successfully added
-      res.status(200);
       const BlockModel = new Block;
       BlockModel.body = data
-      PrivateChain.addBlock(BlockModel);
+      PrivateChain.addBlock(BlockModel).then((createdBlock) => {
+      res.status(200);
       res.setHeader('Content-Type','text/json',);
-      res.json({'BlockStatus': 'Successful'});
+      res.json(createdBlock);
       res.end();
+      }).catch(function(err){
+        clientErrorHandler(err,req,res);
+      });
     }
-		//back end error handling
-  }catch{
-    res.status(500);
-    res.json({'Server':'Oops I broke!'});
-    res.end();
-  }
 });
 
 

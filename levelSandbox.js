@@ -16,7 +16,6 @@ addLevelDBData(key, value) {
   return new Promise(function(resolve, reject) {
       self.db.put(key, value, function(err) {
           if (err) {
-              console.log('Block ' + key + ' submission failed', err);
               reject(err);
           }
           resolve(value);
@@ -48,14 +47,9 @@ getLevelDBData(key){
   return new Promise(function(resolve, reject) {
       self.db.get(key, (err, value) => {
           if(err){
-              if (err.type == 'NotFoundError') {
-                  resolve(undefined);
-              }else {
-                  console.log('Block ' + key + ' get failed', err);
-                  reject(err);
-              }
+            reject(500);
           }else {
-              resolve(value);
+            resolve(value);
           }
       });
   });
@@ -71,7 +65,6 @@ getLevelDBData(key){
       }).on('error', function(err) {
         reject(err)
       }).on('close', function() {
-        
         self.addLevelDBData(i, value);
         resolve(true)
       });
@@ -87,34 +80,28 @@ getBlocksCount() {
   self.db.createReadStream().on('data', function(data) {
       a++;
   }).on('error', function(err) {
-      reject(err)
+      reject(500);
   }).on('close', function() {
     resolve(a);
+    
   });
 });
 }
 
 // Only Used for app.js 
 // Allow the client to view the blockchain
+// TODO FIX THE ERROR
 getChain() {
   let self = this;
   var BC = [];
   return new Promise(function(resolve, reject) {
   self.db.createReadStream().on('data', function(data) {
-      
-      //console.log(typeof obj.height);
-      //BC.splice(obj.height, 0, data);
       BC.push(data);
-
   }).on('error', function(err) {
-      reject(err)
-      //return console.log('Unable to read data stream!', err)
-  }).on('close', function() {
-      //console.log('returning length as: ' + a);
-      
+      reject(500)
+  }).on('close', function() { 
     resolve(BC);
-    
-      //return a-1;
+
   });
 });
 }
