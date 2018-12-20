@@ -78,7 +78,7 @@ class Blockchain{
 |    -Block is rehashed and compared to validate the block .                |
 |    -When rehashing the block the hash value is remove to get a valid hash.|
 |    INPUT                                                                  |
-|      intager (block height)                                               |
+|      integer (block height)                                               |
 |    OUTPUT                                                                 |
 |      string (Block vaildation) as a promise                               |
 |  ========================================================================*/
@@ -168,7 +168,7 @@ class Blockchain{
 |   INPUT                                                                        |
 |        NONE                                                                    |
 |    OUTPUT                                                                      |
-|        intager of height of chain as a promise                                 |
+|        integer of height of chain as a promise                                 |
 |  ==============================================================================*/
 
     getHeight(){
@@ -186,7 +186,7 @@ class Blockchain{
 |   -Function within Blockchain class to get a speific block on the chain |
 |    -Uses getLevelDBData to reateive block from leveldb                  |
 |    INPUT                                                                |
-|        intager used to get specific block                               |
+|        integer used to get specific block                               |
 |    OUTPUT                                                               |
 |        block object as a promise                                        |
 |  ======================================================================*/
