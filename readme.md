@@ -160,7 +160,7 @@ If you did the first step correcly you should have a message (address:epoch time
 
 Example of signing a message
 
-![Signature](./readmepic/sign.png)
+![Signature](./readmepic/sign.PNG)
 
 Now take your address and newly created signature and create a new post with a JSON body 
 
