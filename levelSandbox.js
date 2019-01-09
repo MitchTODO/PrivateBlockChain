@@ -1,7 +1,4 @@
-/* ===== Persist data with LevelDB ===================================
-|  Learn more: level: https://github.com/Level/level     |
-|  =============================================================*/
-
+//level library
 const level = require('level');
 const chainDB = './chaindata';
 
@@ -24,8 +21,7 @@ addLevelDBData(key, value) {
   });
 }
 
-//  NOTE THIS IS ONLY FOR DEVELOPMENT
-// Used in app.js to alterblocks to show that chain and Block Validation work
+// This is only used for testing
 changeDBData(key,value){
     let self = this;
     return new Promise(function(resolve,reject) {
@@ -89,21 +85,29 @@ getBlocksCount() {
 });
 }
 
-// Only Used for app.js 
-// Allow the client to view the blockchain
-getChain() {
+// loops through each block, can check by three things HASH,ADDRESS and STAR
+getChain(key,SearchType) {
   let self = this;
   var BC = [];
   return new Promise(function(resolve, reject) {
-  self.db.createReadStream().on('data', function(data) {
-      BC.push(data);
-  }).on('error', function(err) {
-      reject(500)
-  }).on('close', function() { 
-    resolve(BC);
-
-  });
-});
+    self.db.createReadStream().on('data', function(data) {
+        var stringObject = data.value;
+        var blockObject = JSON.parse(stringObject);
+        if (SearchType == "HASH" & key.length == 64 & blockObject.hash == key){
+            resolve(blockObject); // Only one block can match a hash
+        }else if (SearchType == "ADDRESS" & key.length == 34 & blockObject.body.address == key){
+            BC.push(blockObject);
+        }else if (SearchType == "STAR"){
+            if (blockObject.body.star.dec == key.dec & blockObject.body.star.ra == key.ra){
+                BC.push(blockObject)
+            };
+        };
+        }).on('error', function(err) {
+            reject(500)
+        }).on('close', function() { 
+            resolve(BC); // resolve array
+        });
+    });
 }
 
 }
