@@ -26,7 +26,7 @@ Post message-signature uses address and signature sent by user to get verified b
 
 #### Post block
 
-Post block will check if users address is valid to own a star by passing the users address to verifyaddressRequest in the mempool. If true then users star data is check for undefine variables and if its not already owned. Finding undefine variables is done through a helper function called starChecker in api. Checking ownership is done by passing star data to ChainRecon in Blockchain. A list is returned containing the block that match the star data. If the list returned is empty then that requested star is not owned. A new block is created with body of the block being the address and star data sent by the user json. Star story is also encoded in hexadecimal and sent to the user. Validation block is removed from the mempool.
+Post block will check if users address is valid to own a star by passing the users address to verifyaddressRequest in the mempool. If true then users star data is check for unknown variables and if its not already owned. Finding unknown variables is done through a helper function called starChecker in api. Checking ownership is done by passing star data to ChainRecon in Blockchain. A list is returned containing the block that match the star data. If the list returned is empty then that requested star is not owned. A new block is created with body of the block being the address and star data sent by the user json. Star story is also encoded in hexadecimal and sent to the user. Validation block is removed from the mempool.
 
 #### Get stars/hash
 
@@ -216,20 +216,20 @@ Example request
 Response 
 ```json
 {
-    "hash": "02f16856eecdca11b68131c4b2c2b627d774a31434dcf9d0fd678bc70ef3ad70",
-    "height": 5,
+    "hash": "499a472f40e31f225ea474d5d6e881bee97580e9d3b57239364d3a414e136b28",
+    "height": 1,
     "body": {
         "address": "1D3uSMA151f93mS824USmwPSoTeyzGD7Ec",
         "star": {
-            "dec": "98° 53' 56.9",
-            "ra": "16h 29m 1.0s",
-            "story": "466f756e642073746172207573696e672068747470733a2f2f7777772e676f6f676c652e636f6d2f736b792f"
+            "dec": "28° 64' 56.9",
+            "ra": "14h 33e 7.0s",
+            "story": "466f756e642073746172207573696e672068747470733a2f2f7777772e676f6f676c652e636f6d2f736b792f",
+            "storyDecoded": "Found star using https://www.google.com/sky/"
         }
     },
-    "time": "1546925582",
-    "previousBlockHash": "6ce20ebb7f7703d944d92a49a51c2f3f28af8577b885f6b315b86e962c3e5b5a"
+    "time": "1547153224",
+    "previousBlockHash": "91e32ca089b38bd1f47712c067ec9ccaabf1fd9fb24319614e6f94aadc324e9c"
 }
 ```
 If you get expected output then you successfully created a new block and registered a star.
-
 
