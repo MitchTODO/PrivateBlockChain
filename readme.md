@@ -132,7 +132,7 @@ socket: http://localhost:8000/
 
 ---
 
-## Endpoints \ requester a star 
+## Endpoints \ register a star 
 
 ### 1st send a request 
 
@@ -194,7 +194,7 @@ Response
 }
 ```
 
-### 3rd creating a new block on the chain and requesting a star
+### 3rd creating a new block on the chain and register a star
 
 Now we will be creating a new post request with nested JSON of are address and star data.
 
