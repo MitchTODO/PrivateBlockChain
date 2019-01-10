@@ -164,7 +164,7 @@ If you did the first step correctly you should have a message (address:epoch tim
 
 Example of signing a message.
 
-![Signature](./readmePic/sign.png)
+![Signature](./readmepic/sign.PNG)
 
 Now take your address and newly created signature and create a new post with a JSON body. 
 
@@ -229,6 +229,6 @@ Example output
     "previousBlockHash": "6ce20ebb7f7703d944d92a49a51c2f3f28af8577b885f6b315b86e962c3e5b5a"
 }
 ```
-If you get expected output then you successfully created a new block and requested a star.
+If you get expected output then you successfully created a new block and registered a star.
 
 
