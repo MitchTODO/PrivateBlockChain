@@ -12,58 +12,62 @@ Changes were made to check if users star is already owned before writing star da
 
 ### Webapi
 
-Connecting the user to the web appilication through six endpoints. Three are post and three are get. Post endpoints allow the validaition of a signature and if true, a block will be added to the chain with user data. All get endpoints search for a specific block/s by different values (Hash,address and height). These values are sent through URL encoding. Error handling was thought out as much as possible. From server problems to user having incorrect bitcoin wallet length. All errors are handled through myboom.
+Connecting the user to the web application through six endpoints. Three are post and three are get. Post endpoints allow the validation of a signature and if true, a block will be added to the chain with user data. All get endpoints search for a specific block/s by different values (Hash,address and height). These values are sent through URL encoding. Error handling was thought out as much as possible. From server problems to user having incorrect bitcoin wallet length. All errors are handled through myboom.
 
-#### Post RequestValiation
+#### Post RequestValidation
 
-Post requestValidation starts the validaiton process by the user sending there bitcoin address within the body of a http packet in json. This address is then passed to the (requestValidation) to create a mempool validaiton Block object this includes the message for signing. Validaiton block is send back to the user. 
+Post requestValidation starts the validation process by the user sending there bitcoin address within the body of a http packet in json. This address is then passed to the (requestValidation) to create a mempool validation Block object this includes the message for signing. Validation block is send back to the user. 
+
 
 #### Post message-signature/validation
 
-Post message-signature uses address and signature sent by user to get varified by validateRequestByWallet within the mempool. This will return whether the address is allowed to own a star and sent has json to the user. The message is not sent with address and signature, rather message is found in the mempool found by the users address.
+Post message-signature uses address and signature sent by user to get verified by validateRequestByWallet within the mempool. This will return whether the address is allowed to own a star and sent has json to the user. The message is not sent with address and signature, rather message is found in the mempool found by the users address.
+
 
 #### Post block
 
-Post block will check if users address is valid to own a star by passing the users address to verifyaddressRequest in the mempool. If true then users star data is check to make sure its not already owned. This process is done by passing star data to ChainRecon in Blockchain. A list is returned containing the block that match the star data. If the list returned is empty then that requested star is not owned. A new block is created with body of the block being the address and star data sent by the user json. Star story is also encoded in hexedecaiml and sent to the user. Validation block is removed from the mempool.
+Post block will check if users address is valid to own a star by passing the users address to verifyaddressRequest in the mempool. If true then users star data is check to make sure its not already owned. This process is done by passing star data to ChainRecon in Blockchain. A list is returned containing the block that match the star data. If the list returned is empty then that requested star is not owned. A new block is created with body of the block being the address and star data sent by the user json. Star story is also encoded in hexadecimal and sent to the user. Validation block is removed from the mempool.
 
 #### Get stars/hash
 
-A search method to get a speific block my hash. By passing the hash found in the URL to ChainRecon in blockchain with search pramater as "HASH". This will return a list that contains the block that matches the hash. If the list contains nothing, then hash diddn't match any blocks.
+A search method to get a specific block my hash. By passing the hash found in the URL to ChainRecon in blockchain with search parameter as "HASH". This will return a list that contains the block that matches the hash. If the list contains nothing, then the hash didn't match any blocks.
 
 
 #### Get stars/address
 
-*Note simuler to stars/hash*
+*Note similar to stars/hash*
 
-A search method to get a speific block my address. By passing the address found in the URL to ChainRecon in blockchain with search pramater as "ADDRESS". This will return a list that constain all the blocks that match the address. If the list contains nothing, then address diddn't match any blocks.
+A search method to get a specific block my address. By passing the address found in the URL to ChainRecon in blockchain with search parameter as "ADDRESS". This will return a list that contain all the blocks that match the address. If the list contains nothing, then address didn't match any blocks.
 
 The big difference with this method is a address could own multiple star. While the other methods only search for a specific block.
 
+
 #### Get block
 
-A search method to get a speific block my height. By passing the height found in the URL to getBlock in blockchain returning the block. If users height is out of range of the current chain then a error will accour telling the user the height or if any block exist.
+A search method to get a specific block my height. By passing the height found in the URL to getBlock in blockchain returning the block. If users height is out of range of the current chain then a error will occur telling the user the height or if any block exist.
+
 
 ---
 
 ### Error Handling (MyBoom.js) 
 
-A basic error handling class made specificly for express. Handles all http errors for the api, with a custom message and error code. The error code allows for identify and alleviating any problems a user might have.
+A basic error handling class made specifically for express. Handles all http errors for the API, with a custom message.
 
 ---
 
 ### Mempool  
 
-Allows the validation of a bitcoin address within a set period of time (5 minutes). Then by verifing the address, signature and message, allows that address to be validated and granted access to create a new block. Contains three classes validationBlock, validationStatus and Mempool. A important library was needed in mempool.js called bitcoinjs-message, allowing for the verifing of address.
+Allows the validation of a bitcoin address within a set period of time (5 minutes). Then by verifying the address, signature and message, allows that address to be validated and granted access to create a new block. Contains three classes validationBlock, validationStatus and Mempool. A important library was needed in mempool.js called bitcoinjs-message, allowing for the verifying of address.
 
-ValidationBlock class repesents the starting request that will timeout inside the mempool and is returned when requestValidation in mempool is called.
+ValidationBlock class represents the starting request that will timeout inside the mempool and is returned when requestValidation in mempool is called.
 
-ValidationStatus class repersents valdation status of the block and is returned from validateRequestByWallet in mempool. Is added inside the same ValidationBlock.  
+ValidationStatus class represents validation status of the block and is returned from validateRequestByWallet in mempool. Is added inside the same ValidationBlock.  
 
 Mempool class creates and manages validationBlocks in the mempool (a list). The Mempool class has five important functions.
 
 <u>TimeTracker:</u> Allows for validation blocks to have a updated validationWindow when called.
 
-<u>requestValidation:</u> Allow for address to request a validaiton window. Will prevent multiple request by the same address. The Object itself that is add to the mempool is {id:address,validationBlock} and a timing-out function that will delete the request by the id. The ValidaitonBlock is returned when called.
+<u>requestValidation:</u> Allow for address to request a validation window. Will prevent multiple request by the same address. The Object itself that is add to the mempool is {id:address,validationBlock} and a timing-out function that will delete the request by the id. The ValidaitonBlock is returned when called.
 ```javascript
 self.mempool.push({id:request.walletAddress,request},setTimeout(function(){ self.removeValidation(request.walletAddress); },TimingWindow)); // auto removing in 5 min from mempool  
 ```
@@ -72,19 +76,19 @@ self.mempool.push({id:request.walletAddress,request},setTimeout(function(){ self
 
 <u>validateRequestByWallet:</u> Uses address,signature and message within bitcoinMessage.verify to return a bool value representing the addresses is under correct ownership. The bool value is then added to a new validationStatus object. The object is then added to the mempool within the same requestblock and returned.
 
-<u>varifyAddressRequest:</u> Checksum to verify address has been signed and is valid. Allowing address to own a star 
+<u>varifyAddressRequest:</u> Checksum to verify address has been signed and is valid. Allowing address to own a star. 
 
 ---
 
 ### Blockchain 
 
-Manages the blockchain, can create new blocks, validates a single block or inter chain. Also reposnible for find height or a specific block. Currently im only using three functions within this class.
+Manages the blockchain, can create new blocks, validates a single block or inter chain. Also responsible for find height or a specific block. Currently using three functions within this class.
 
-<u>addblock:</u> AddBlock function takes in a block object. Then checking the height of the saved chain determines a genesis block or exsiting block. If height is zero, there are no blocks on the chain therefore a genesis block will be created. Otherwise the last block of the saved chain is used to link the new block to the chain.
+<u>addblock:</u> AddBlock function takes in a block object. Then checking the height of the saved chain determines a genesis block or existing block. If height is zero, there are no blocks on the chain therefore a genesis block will be created. Otherwise the last block of the saved chain is used to link the new block to the chain.
 
-<u>getBlock:</u> Middle function connecting the api to leveldb. Uses getLevelDBData to return a specific block.
+<u>getBlock:</u> Middle function connecting the API to leveldb. Uses getLevelDBData to return a specific block.
 
-<u>ChainRecon:</u> Middle function connecting the api to leveldb. Uses getChain to return a list of matching block/s.
+<u>ChainRecon:</u> Middle function connecting the API to leveldb. Uses getChain to return a list of matching block/s.
 
 ---
 ### levelSandBox
@@ -100,9 +104,9 @@ Contains leveldb class, this allows blocks on the chain to be persistent. The fu
 *Tested with postman 6.6.1*
 *Tested with electrum 3.2.3* new version of electrum use a different encoding  
 
-Any applicaion that has Base58 encoded address and allows for signing messages 
+Any bitcoin wallet application that has Base58 encoded address and allows for signing messages.
 
-Posting data is sent with raw body data encoded with application/JSON
+Posting data is sent with raw body data encoded with application/JSON.
 
 ### Needed librarys
     npm -i level                // database
@@ -156,13 +160,13 @@ Example output
 
 ### 2nd Message Signature & Validation
 
-If you did the first step correcly you should have a message (address:epoch timestape:starReqistry). Next go to your bitcoin wallet manager of choice and used the same address to sign the message. 
+If you did the first step correctly you should have a message (address:epoch timestamp:starReqistry). Next go to your bitcoin wallet manager of choice and used the same address to sign the message. 
 
-Example of signing a message
+Example of signing a message.
 
-![Signature](./readmepic/sign.PNG)
+![Signature](./readmePic/sign.png)
 
-Now take your address and newly created signature and create a new post with a JSON body 
+Now take your address and newly created signature and create a new post with a JSON body. 
 
 POST : http://localhost:8000/message-signature/validate
 
@@ -225,9 +229,6 @@ Example output
     "previousBlockHash": "6ce20ebb7f7703d944d92a49a51c2f3f28af8577b885f6b315b86e962c3e5b5a"
 }
 ```
-If you get expected output then you successfully created a new block and requested a star
+If you get expected output then you successfully created a new block and requested a star.
 
-## Error Codes
 
-    110: Server problem 
-    111: Could be address is not base58 encoded

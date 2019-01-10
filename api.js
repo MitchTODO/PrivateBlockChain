@@ -64,13 +64,13 @@ app.post("/requestValidation",async function(req,res){
           Mempool.requestValidation(Address).then((validReturn) => {
             outgoing(res,validReturn);
           }).catch(function(err){
-            Boom.badImplementation(res,"Server cannot create a validation request. Error Code: 110");
+            Boom.badImplementation(res,"Server cannot create a validation request.");
           });
       }else{
-        Boom.badRequest(res,'Missing or invalid Bitcoin wallet. Error Code: 111');
+        Boom.badRequest(res,'Missing or invalid Bitcoin wallet.');
       };
   }else{
-    Boom.badRequest(res,'Invalid post, check your JSON. Error Code: 112');
+    Boom.badRequest(res,'Invalid post, check your JSON.');
   };
 });
 
@@ -98,16 +98,16 @@ app.post("/message-signature/validate", async function(req,res){
         outgoing(res,validReturn);
       }).catch(function(err){
         if (err == 410){
-          Boom.resourceGone(res,'Request Expired or wallet address is incorrect, please create a new validation request. Error Code: 120');
+          Boom.resourceGone(res,'Request Expired or wallet address is incorrect, please create a new validation request.');
         }else if (err == 500){
-          Boom.badImplementation(res,'Server cannot validate request by wallet. Error Code: 121');
+          Boom.badImplementation(res,'Server cannot validate request by wallet.');
         };
       });
     }else{
-        Boom.badRequest(res,'Wallet and/or signature is not correct. Error Code: 122');
+        Boom.badRequest(res,'Wallet and/or signature is not correct.');
     };
   }else{
-    Boom.badRequest(res,'Invalid post, check your JSON. Error Code: 123');
+    Boom.badRequest(res,'Invalid post, check your JSON.');
   };
 });
 
@@ -138,30 +138,31 @@ app.post('/block',async function(req,res) {
               let NewBlock = new block.Block(starObject);
               PrivateChain.addBlock(NewBlock).then((BackBlock) => {
                 outgoing(res,BackBlock); 
+                Mempool.removeValidation(starObject.address);
               }).catch(function(err){
-                Boom.badImplementation(res,"Cannot create block with star data. Error Code: 130");
+                Boom.badImplementation(res,"Cannot create block with star data.");
               });
             }else{
-              Boom.conflict(res,"Star already owned. Error Code:131");
+              Boom.conflict(res,"Star already owned.");
             };
           }).catch(function(err){
-            Boom.badImplementation(res,"Cannot verify if star is owned. Error Code: 132");
+            Boom.badImplementation(res,"Cannot verify if star is owned.");
           });
         }else{
-          Boom.unauthorized(res,'Wallet address and signature is not valid. Error Code: 133');
+          Boom.unauthorized(res,'Wallet address and signature is not valid.');
         };
       }).catch(function(err){
         if (err == 500){
-          Boom.badImplementation(res,'Cannot varify address. Error Code: 134');
+          Boom.badImplementation(res,'Cannot varify address.');
         }else if (err == 400){
-          Boom.badRequest(res,'Cannot find address in mempool. Error Code: 135');
+          Boom.badRequest(res,'Cannot find address in mempool.');
         };
       });
     }else{
-      Boom.badRequest(res,'Story has Non ASCII characters and/or is too long, please keep it under 250 charaters. Error Code: 136');
+      Boom.badRequest(res,'Story has Non ASCII characters and/or is too long, please keep it under 250 charaters.');
     };
   }else{
-    Boom.badRequest(res,'Invalid post, check your JSON. Error Code: 137');
+    Boom.badRequest(res,'Invalid post, check your JSON.');
   };   
 });
 
@@ -181,15 +182,15 @@ app.get('/stars/hash:HASH',async function(req,res){
   if (key.length == 64 & incoming(key) == true){ 
     PrivateChain.ChainRecon(key,'HASH').then((MatchBlocks) => { // get block that were created with are key (hash)
       if (MatchBlocks.length == 0){ 
-        Boom.notFound(res,'no results found. Error Code: 140');
+        Boom.notFound(res,'no results found.');
       }else{
         outgoing(res,MatchBlocks); // return the block
       }
     }).catch(function(err){
-      Boom.badImplementation(res,'Not able to search blocks. Error Code: 141');
+      Boom.badImplementation(res,'Not able to search blocks.');
     });
   }else{
-    Boom.badRequest(res,'Invalid get request, check your parameters. Error Code: 142');
+    Boom.badRequest(res,'Invalid get request, check your parameters.');
   }
 });
 
@@ -209,15 +210,15 @@ app.get('/stars/address:ADDRESS',async function(req,res){
   if (key.length == 34 & incoming(key) == true){ 
     PrivateChain.ChainRecon(key,"ADDRESS").then((MatchBlocks) => { 
       if (MatchBlocks.length == 0){ // check array for block
-        Boom.notFound(res,'no results found. Error Code: 150');
+        Boom.notFound(res,'no results found.');
       }else{
         outgoing(res,MatchBlocks);
       }
     }).catch(function(err){
-      Boom.badImplementation(res,'Not able to search blocks. Error Code: 151');
+      Boom.badImplementation(res,'Not able to search blocks.');
     });
   }else{
-    Boom.badRequest(res,'Invalid get request, check your parameters. Error Code: 152');
+    Boom.badRequest(res,'Invalid get request, check your parameters.');
   };
 });
 
@@ -245,19 +246,19 @@ app.get('/block/:index',async function(req,res){
             let Block_data = JSON.parse(Blockstring);
             outgoing(res,Block_data);
           }).catch(function(err){
-            Boom.badImplementation(res,'Not able to search blocks. Error Code: 160');
+            Boom.badImplementation(res,'Not able to search blocks.');
           });
           }else{
-            Boom.conflict(res,'Invalid block height, current hight of chain is '+ CorrectIndex+'. Error Code: 161');
+            Boom.conflict(res,'Invalid block height, current hight of chain is '+ CorrectIndex+'.');
           }
         }else{
-          Boom.badRequest(res,'Please enter a number. Error Code: 162');
+          Boom.badRequest(res,'Please enter a number.');
         }
       }else{
-        Boom.notFound(res,'No blocks exist. Error Code: 163');
+        Boom.notFound(res,'No blocks exist.');
       }
     }).catch(function(err){
-      Boom.badImplementation(res,'Not able to search blocks. Error Code: 164');
+      Boom.badImplementation(res,'Not able to search blocks.');
   });
 });
 
