@@ -12,7 +12,7 @@ Changes were made to check if users star is already owned before writing star da
 
 ### Webapi
 
-Connecting the user to the web application through six endpoints. Three are post and three are get. Post endpoints allow the validation of a signature and if true, a block will be added to the chain with user data. All get endpoints search for a specific block/s by different values (Hash,address and height). These values are sent through URL encoding. Error handling was thought out as much as possible. From server problems to user having incorrect bitcoin wallet length. All errors are handled through myboom.
+Connecting the user to the web application through six endpoints. Three are post and three are get. Post endpoints allow the validation of a signature and if true, a block will be added to the chain with user data. All get endpoints search for a specific block/s by different values (Hash,address and height). These values are sent through URL encoding. Get endpoints also uses a helper function called "hex2ascii" to decoded the star story. Error handling was thought out as much as possible. From server problems to user having incorrect bitcoin wallet length. All errors are handled through myboom.
 
 #### Post RequestValidation
 
@@ -26,7 +26,7 @@ Post message-signature uses address and signature sent by user to get verified b
 
 #### Post block
 
-Post block will check if users address is valid to own a star by passing the users address to verifyaddressRequest in the mempool. If true then users star data is check to make sure its not already owned. This process is done by passing star data to ChainRecon in Blockchain. A list is returned containing the block that match the star data. If the list returned is empty then that requested star is not owned. A new block is created with body of the block being the address and star data sent by the user json. Star story is also encoded in hexadecimal and sent to the user. Validation block is removed from the mempool.
+Post block will check if users address is valid to own a star by passing the users address to verifyaddressRequest in the mempool. If true then users star data is check for unknown variables and if its not already owned. Finding unknown variables is done through a helper function called starChecker in api. Checking ownership is done by passing star data to ChainRecon in Blockchain. A list is returned containing the block that match the star data. If the list returned is empty then that requested star is not owned. A new block is created with body of the block being the address and star data sent by the user json. Star story is also encoded in hexadecimal and sent to the user. Validation block is removed from the mempool.
 
 #### Get stars/hash
 
@@ -102,7 +102,8 @@ Contains leveldb class, this allows blocks on the chain to be persistent. The fu
 ### Electrum / Postman
 
 *Tested with postman 6.6.1*
-*Tested with electrum 3.2.3* new version of electrum use a different encoding  
+
+*Tested with electrum 3.2.3* new version of electrum use a different address encoding  
 
 Any bitcoin wallet application that has Base58 encoded address and allows for signing messages.
 

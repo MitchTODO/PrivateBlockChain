@@ -17,7 +17,7 @@ class Blockchain{
             newBlock.height = result;
             newBlock.time = new Date().getTime().toString().slice(0,-3);
             newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-            db.addDataToLevelDB(JSON.stringify(newBlock).toString());
+            db.addDataToLevelDB(JSON.stringify(newBlock));
             resolve(newBlock);
         }else{
             db.getLevelDBData(result - 1).then((resultBlock) => {
@@ -27,7 +27,7 @@ class Blockchain{
             newBlock.height = result;
             newBlock.time = new Date().getTime().toString().slice(0,-3);
             newBlock.hash = SHA256(JSON.stringify(newBlock)).toString();
-            db.addDataToLevelDB(JSON.stringify(newBlock).toString());
+            db.addDataToLevelDB(JSON.stringify(newBlock));
             resolve(newBlock);
                         }).catch(function(err){
             reject(err);
