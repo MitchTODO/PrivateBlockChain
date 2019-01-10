@@ -141,14 +141,14 @@ JSON key being  "address"
 
 POST : http://localhost:8000/requestValidation
 
-Example input 
+Example request
 ```json
 {
 	"address":"1D3uSMA151f93mS824USmwPSoTeyzGD7Ec"	
 }
 ```
 
-Example output
+Response
 ```json
 {
     "walletAddress": "1D3uSMA151f93mS824USmwPSoTeyzGD7Ec",
@@ -170,7 +170,7 @@ Now take your address and newly created signature and create a new post with a J
 
 POST : http://localhost:8000/message-signature/validate
 
-Example input 
+Example request 
 ```json 
 {
 	"address":"1D3uSMA151f93mS824USmwPSoTeyzGD7Ec",
@@ -180,7 +180,7 @@ Example input
 
 Check to make sure registerStar is true and messageSignature is also true. If both are true you are ready to move to the next step.
 
-Example Output 
+Response  
 ```json 
 {
     "registerStar": true,
@@ -200,7 +200,7 @@ Now we will be creating a new post request with nested JSON of are address and s
 
 POST: http://localhost:8000/block
 
-Example input
+Example request
 ```json
 {
     "address": "1D3uSMA151f93mS824USmwPSoTeyzGD7Ec",
@@ -212,7 +212,7 @@ Example input
 }
 ```
 
-Example output
+Response 
 ```json
 {
     "hash": "02f16856eecdca11b68131c4b2c2b627d774a31434dcf9d0fd678bc70ef3ad70",
