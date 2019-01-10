@@ -26,7 +26,7 @@ Post message-signature uses address and signature sent by user to get verified b
 
 #### Post block
 
-Post block will check if users address is valid to own a star by passing the users address to verifyaddressRequest in the mempool. If true then users star data is check for unknown variables and if its not already owned. Finding unknown variables is done through a helper function called starChecker in api. Checking ownership is done by passing star data to ChainRecon in Blockchain. A list is returned containing the block that match the star data. If the list returned is empty then that requested star is not owned. A new block is created with body of the block being the address and star data sent by the user json. Star story is also encoded in hexadecimal and sent to the user. Validation block is removed from the mempool.
+Post block will check if users address is valid to own a star by passing the users address to verifyaddressRequest in the mempool. If true then users star data is check for undefine variables and if its not already owned. Finding undefine variables is done through a helper function called starChecker in api. Checking ownership is done by passing star data to ChainRecon in Blockchain. A list is returned containing the block that match the star data. If the list returned is empty then that requested star is not owned. A new block is created with body of the block being the address and star data sent by the user json. Star story is also encoded in hexadecimal and sent to the user. Validation block is removed from the mempool.
 
 #### Get stars/hash
 
