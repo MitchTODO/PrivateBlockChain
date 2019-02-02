@@ -244,6 +244,8 @@ _My Versions_
 
 ``Token address c963a21eb4d6445bbac51a143477b898``
 
+``openzeppelin-solidity v2.1.2``
+
 ``nodejs v11.3.0``
 
 ``Truffle v5.0.3``
