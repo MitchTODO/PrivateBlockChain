@@ -265,9 +265,9 @@ Install truffle
 
     npm -g install truffle
 
-Run truffle develope in the project repo:
+Run truffle develop in the project repo:
 
-    truffle develope
+    truffle develop
 
 You should see truffle running on http://127.0.0.1:9545/ with a development console
 
