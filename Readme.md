@@ -250,7 +250,7 @@ _My Versions_
 
 ``Truffle v5.0.3``
 
-``webpack 4.28.1``
+``webpack (web3) 4.28.1``
 
 clone the git repository
 
@@ -385,4 +385,4 @@ Now we will view the new star Token on <a href = "https://rinkeby.etherscan.io/t
 
 ![alt text](pics/Token.png "Token")
 
-StarNotary smart contract is now deployed on a test public blockchain.
+StarNotary smart contract is now deployed on Rinkeby test network.
