@@ -54,7 +54,7 @@ module.exports = {
     },
      rinkeby: {
      provider: function() {
-         return new HDWalletProvider("<YOUR METAMASK SEED>","https://rinkeby.infura.io/v3/c963a21eb4d6445bbac51a143477b898")
+         return new HDWalletProvider("<YOUR METAMASK SEED>","<rinkeby contract address>")
        },
        network_id: '4',
        gas: 4500000,
