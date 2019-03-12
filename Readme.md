@@ -192,7 +192,7 @@ it('lets a user transfer a star', async() => {
 ```
 ---
 
-## Front end DAPP
+## Front End DAPP
 
 functions:
 
