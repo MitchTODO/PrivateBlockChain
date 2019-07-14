@@ -1,7 +1,7 @@
 
 # Decentralized Star Notary
 
-StarNotary smart contract allows for the ownership and transfer of stars, that is deployed on the Rinkeby public test network. The star notary contract is inherited from <a href = http://erc721.org/>ERC721 </a>, that is a minimum interface smart contract that allows for unique tokens to be managed, owned and traded.
+StarNotary smart contract allows for the ownership and transfer of stars, that is deployed on the Rinkeby public test network. The star notary contract is inherited from <a href = http://erc721.org/> ERC721 </a>, that is a minimum interface smart contract that allows for unique tokens to be managed, owned and traded.
 
 ---
 
@@ -365,7 +365,7 @@ networks: {
 
 Deploying to Rinkeby, open a new console in the project repo and run:
 
-    truffle migrate --reset --network rinkeby
+    truffle migrate --network rinkeby --reset
 
 In another console run web3, run:
 
